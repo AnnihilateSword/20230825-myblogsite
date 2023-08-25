@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+<!-- 这个必须放在 extends 'base.html' 下面 -->
+{% load static %}
+
+{% block title %}
+    关于
+{% endblock title %}
+
+<!-- CSS Expand -->
+{% block css_styles01 %}
+    <link rel="stylesheet" href="{% static 'css/about.css' %}">
+{% endblock css_styles01 %}
+
+<!-- 导航栏链接激活 -->
+{% block nav-home-active %}active{% endblock %}
+
+<!-- 主体内容 -->
+{% block content %}
+    <!-- 插图 -->
+    <div style="text-align: center;">
+        <img src="{% static 'res/img/about.png' %}" alt="" style="width: 720px; margin-top: -60px; margin-bottom: 40px;">
+    </div>
+
+    <div class="about-content">
+        <h4>虽然我们不在同一个地方，我们却还是看着同一片天空</h4>
+        &nbsp;&nbsp;&nbsp;
+        <p>联系方式：743144825@qq.com</p>
+    </div>
+{% endblock content %}
+
+<!-- Js -->
+{% block script_extends %}
+    <script type="text/JavaScript">
+        // 启动此页面时删除横幅标签
+        var header_banner = document.getElementById('header-banner');
+        window.onload = function() {
+            header_banner.remove(); 
+        }
+    </script>
+{% endblock script_extends %}

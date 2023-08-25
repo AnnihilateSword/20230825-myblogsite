@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+<!-- 自定义模板标签 -->
+{% load comment_tags %}
+{% load likes_tags %}
+
+<!-- 页面标题 -->
+{% block title %}
+    博客列表
+{% endblock title %}
+
+<!-- CSS -->
+{% block css_styles01 %}
+    <link rel="stylesheet" href="{% static 'css/blog_list.css' %}">
+{% endblock css_styles01 %}
+
+<!-- 导航栏链接激活 -->
+{% block nav-blog-active %}active{% endblock %}
+
+<!-- 主体内容 -->
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <!-- 文章列表 --> 
+            <div class="col-sm-7 col-md-8 col-lg-9 blog-list-top-div">
+                <!-- 通过 page_of_blogs 获取博客列表 -->
+                {% for blog in blogs %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="blog-list">
+                                <!-- 这里引用了别名，方便维护，如果需要参数，后面需要跟参数 -->
+                                <a href="{% url 'blog_detail' blog.pk %}"><h3 class="card-title">{{ blog.title }}</h3></a>
+                                <p class="blog-list-info card-subtitle mb-2 text-body-secondary">
+                                    <img src="{% static 'res/img/bookmark-star-fill.svg' %}" alt="分类">
+                                    <a href="{% url 'blog_with_type' blog.blog_type.pk %}">{{ blog.blog_type }}</a>
+                                    &nbsp;&nbsp;
+                                    作者：{{ blog.author }}
+                                    &nbsp;&nbsp;
+                                    更新日期：{{ blog.last_update_time|date:'Y-m-d' }}
+                                    &nbsp;&nbsp;
+                                    阅读 ({{ blog.get_read_num }})
+                                    &nbsp;&nbsp
+                                    评论 ({% get_comment_count blog %})
+                                    &nbsp;&nbsp;
+                                    点赞 ({% get_like_count blog %})
+                                </p>
+                                &nbsp;
+                                <!-- 内容 -->
+                                <p class="card-text">{{ blog.content|truncatechars:120|striptags }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                {% empty %}
+                    <div class="blog-list">
+                        <p class="card-text">-- 暂无博客，敬请期待 --</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- 分类列表 -->
+            <div class="col-sm-4 col-md-3 col-lg-2">
+                <!-- 文章分类列表 -->
+                <div class="card article-kind-list">
+                    <div class="card-body">
+                        <h5 class="card-title">博客分类</h5>
+                        <h6 class="card-subtitle mb-2 text-body-secondary">Blog classification</h6>
+                        <p class="card-text">
+                            {% for blog_type in blog_types %}
+                                <div>
+                                    <a href="{% url 'blog_with_type' blog_type.pk %}">{{ blog_type.type_name }}（{{ blog_type.blog_count }}）</a>
+                                </div>
+                            {% empty %}
+                                <div>暂无分类</div>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 日期分类列表 -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">日期归档</h5>
+                        <h6 class="card-subtitle mb-2 text-body-secondary">Date filing</h6>
+                        <p class="card-text">
+                            {% for blog_date, blog_count in blog_dates.items %}
+                                <div>
+                                    <!-- 添加计数 -->
+                                    <a href="{% url 'blog_with_date' blog_date.year blog_date.month %}">{{ blog_date|date:'Y年-m月' }}（{{ blog_count }}）</a>
+                                </div>
+                            {% empty %}
+                                <div>暂无分类</div>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 页码部分 -->
+            <nav aria-label="Page navigation example" class="paginator">
+                <ul class="pagination paginator justify-content-center">
+                    <!-- 上一页，要做判断是否有上一页 -->
+                    <li class="page-item">
+                        <!-- 这里不作判断直接访问页面可能会有错误 -->
+                        {% if page_of_blogs.has_previous %}  
+                            <a class="page-link" href="?page={{ page_of_blogs.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        {% else %}
+                            <a class="page-link disabled" href="#" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        {% endif %}
+                    </li>
+
+                    <!-- 页码 -->
+                    {% for page_num in page_range %}
+                        {% if page_num == '...' %}
+                            <li class="page-item"><a class="page-link disabled" href="?page={{ page_num }}">{{ page_num }}</a></li>
+                            <!-- <li class="page-item">{{ page_num }}</li> -->
+                        {% else %}
+                            <!-- 页码跳转链接，这里用的是相对路径的做法 -->
+                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- 下一页，要做判断是否有下一页 -->
+                    <li class="page-item"></li>
+                        {% if page_of_blogs.has_next %}
+                            <a class="page-link" href="?page={{ page_of_blogs.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        {% else %}
+                            <a class="page-link disabled" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        {% endif %}
+                    </li>
+                </ul>
+
+                <p class="paginator-note">
+                    博客数量:{{ page_of_blogs.paginator.count }}
+                    &nbsp;
+                    当前第页:{{ page_of_blogs.number }}
+                    &nbsp;
+                    总页数:{{ page_of_blogs.paginator.num_pages }}
+                </p>
+            </nav>
+
+        </div>
+    </div>
+
+{% endblock content %}

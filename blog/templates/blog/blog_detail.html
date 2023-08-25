@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+<!-- 自定义模板标签 -->
+{% load comment_tags %}
+{% load likes_tags %}
+
+<!-- 页面标题 -->
+{% block title %}
+    {{ blog.title }}
+{% endblock title %}
+
+<!-- CSS -->
+{% block css_styles01 %}
+    <link rel="stylesheet" href="{% static 'css/blog_detail.css' %}">
+    <!-- ckeditor 富文本编辑 -->
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+{% endblock css_styles01 %}
+
+<!-- 页面内容 -->
+{% block content %}
+
+    <div class="container">
+        <!-- 博客内容 -->
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+
+                <h1>{{ blog.title }}</h1>
+                <!-- h:n:s 其中 h 是 12小时制，G 是24小时制 -->
+                <ul id="blog-detail-info-li" class="blog-detail-info-ul">
+                    <li class="blog-detail-info-li">作者：{{ blog.author }}</li>
+                    <li class="blog-detail-info-li">分类：<a href="{% url 'blog_with_type' blog.blog_type.pk %}">{{ blog.blog_type }}</a></li>
+                    <li class="blog-detail-info-li">发表日期：{{ blog.create_time|date:'Y-m-d G:i:s' }}</li>
+                    <li class="blog-detail-info-li">最后更新日期：{{ blog.last_update_time|date:'Y-m-d G:i:s' }}</li>
+                    <li class="blog-detail-info-li">阅读 ({{ blog.get_read_num }})</li>
+                    <li id="comment-count" class="blog-detail-info-li">评论 ({% get_comment_count blog %})</li>
+                </ul>
+                <div class="blog-detail-content">
+                    {{ blog.content|safe }}
+                </div>
+
+                <!-- 文章点赞模块 -->
+                <!-- 点击调用方法 -->
+                <div class="like" onclick="likeChange(this, '{% get_content_type blog %}', {{ blog.pk }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up {% get_like_status blog %}" viewBox="0 0 16 16">
+                        <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a8.908 8.908 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.224 2.224 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.866.866 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>
+                    </svg>
+                    <!-- 点赞数量 -->
+                    <span class="liked-num">{% get_like_count blog %}</span>
+                    <span>喜欢</span>
+                </div>
+
+                <!-- 上下篇文章链接 -->
+                <div class="blog-detail-more">
+                    <p>
+                        上一篇：
+                        <!-- 判断 previous_blog 是否有值 -->
+                        {% if previous_blog %}
+                            <a href="{% url 'blog_detail' previous_blog.pk %}">{{ previous_blog.title }}</a>
+                        {% else %}
+                            ----
+                        {% endif %}
+                    </p>
+                    <p>
+                        下一篇：
+                        <!-- 判断 next_blog 是否有值 -->
+                        {% if next_blog %}
+                            <a href="{% url 'blog_detail' next_blog.pk %}">{{ next_blog.title }}</a>
+                        {% else %}
+                            ----
+                        {% endif %}
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 评论 -->
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+                <div class="comment-area">
+                    <h3 class="comment-area-title">提交评论</h3>
+                    {% if user.is_authenticated %}
+                        <!-- 评论处理链接 -->
+                        <form id="comment-form" action="{% url 'update_comment' %}" method="post">
+                            <!-- CSRF 验证 -->
+                            {% csrf_token %}
+                            
+                            <label for="exampleFormControlTextarea1" class="form-label">{{ user.get_nickname_or_username }}，欢迎评论~</label>
+
+                            <!-- 回复模块，一开始设置不可见 -->
+                            <div id="reply-content-container" style="display: none;">
+                                <p id="reply-title">回复：</p>
+                                <div id="reply-content"></div>
+                            </div>
+
+                            <!-- 评论表单 -->
+                            {% get_comment_form blog as comment_form %}
+                            {% for field in comment_form %}
+                                {{ field }}
+                            {% endfor %}
+
+                            <!-- 显示错误信息 ajax 处理 -->
+                            <span id="comment-error" class="text-danger"></span>
+
+                            <!-- 提交按钮 -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary mb-3">评论</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        您尚未登录，登录之后方可评论~
+                        <a href="{% url 'login' %}?from={{ request.get_full_path }}" class="btn btn-primary tabindex="-1" role="button" aria-disabled="true">登录</a>
+                        <a href="{% url 'register' %}?from={{ request.get_full_path }}" class="btn btn-secondary" tabindex="-1" role="button" aria-disabled="true">注册</a>
+                    {% endif %}
+                </div>
+                <div class="comment-area comment-list">
+                    <h3 class="comment-area-title">评论列表</h3>
+                    <!-- 添加 id -->
+                    <div id="comment-list">
+                        {% get_comment_list blog as comments %}
+                        {% for comment in comments %}
+                            <div id="root_{{ comment.pk }}" class="comment">
+                                <span>{{ comment.user.get_nickname_or_username }}</span>
+                                &nbsp;
+                                <span>({{ comment.comment_time|date:'Y-m-d H:i:s' }})：</span>
+                                <div id="comment_{{ comment.pk }}">
+                                    {{ comment.text|safe }}
+                                </div>
+
+                                <!-- 评论点赞模块 -->
+                                <!-- 点击调用方法 -->
+                                <div class="like" onclick="likeChange(this, '{% get_content_type comment %}', {{ comment.pk }})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up {% get_like_status comment %}" viewBox="0 0 16 16">
+                                        <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a8.908 8.908 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.224 2.224 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.866.866 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>
+                                    </svg>
+                                    <!-- 点赞数量 -->
+                                    <span class="liked-num">{% get_like_count comment %}</span>
+                                    <span>点赞</span>
+                                </div>
+
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+
+                                <a href="javascript:reply({{ comment.pk }});">回复</a>
+
+                                <!-- 删除回复，只能删除自己评论的，超级管理员可以删除所有 -->
+                                {% if user == comment.user or user.is_superuser %}
+                                    &nbsp;&nbsp;
+                                    <a href="javascript:del_comment({{ comment.pk }});">删除</a>
+                                {% endif %}
+
+                                {% for reply in comment.root_comment.all %}
+                                    <!-- 回复 -->
+                                    <div id="root_{{ reply.pk }}" class="reply">
+                                        <span>{{ reply.user.get_nickname_or_username }}</span>
+                                        <span>回复</span>
+                                        <span>{{ reply.reply_to.get_nickname_or_username }}</span>
+                                        &nbsp;
+                                        <span>({{ reply.comment_time|date:'Y-m-d H:i:s' }})：</span>
+                                        <div id="comment_{{ reply.pk }}">
+                                            {{ reply.text|safe }}
+                                        </div>
+
+                                        <!-- 回复点赞模块 -->
+                                        <!-- 点击调用方法 -->
+                                        <div class="like" onclick="likeChange(this, '{% get_content_type reply %}', {{ reply.pk }})">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up {% get_like_status reply %}" viewBox="0 0 16 16">
+                                                <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a8.908 8.908 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.224 2.224 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.866.866 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>
+                                            </svg>
+                                            <!-- 点赞数量 -->
+                                            <span class="liked-num">{% get_like_count reply %}</span>
+                                            <span>点赞</span>
+                                        </div>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;
+
+                                        <a href="javascript:reply({{ reply.pk }});">回复</a>
+
+                                        <!-- 删除回复，只能删除自己评论的，超级管理员可以删除所有 -->
+                                        {% if user == reply.user or user.is_superuser %}
+                                            &nbsp;&nbsp;
+                                            <a href="javascript:del_comment({{ reply.pk }});">删除</a>
+                                        {% endif %}
+
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% empty %}
+                            <span id="no-comment">暂无评论</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 模态表单 -->
+    <!-- BootStrap Modal -->
+    <div class="modal fade" id="login-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <!-- 表单 -->
+                <form id="login-modal-form" action="" method="post">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">登录</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <!-- 默认会有冒号 ： 用下面方法可以去掉 -->
+                        <!-- 其实就是当我们自定义表单时，Django 就不会帮我们添加冒号 -->
+                        {% for field in login_modal_form %}
+                            <!-- 标签 -->
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <!-- 这时输入框那部分 -->
+                            {{ field }}
+                        {% endfor %}
+                        <!-- 表单的错误信息 -->
+                        <span id="login-modal-tip" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">登录</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    
+{% endblock content %}
+
+<!-- 拓展：异步提交逻辑 -->
+<!-- 这里用到了 jquery 的东西，需要引用，但是现在我没有引用也没问题，之后再研究一下 -->
+{% block script_extends %}
+    <script type="text/javascript">
+
+        // 启动此页面时删除横幅标签
+        var header_banner = document.getElementById('header-banner');
+        window.onload = function() {
+            header_banner.remove(); 
+        }
+
+        // 获取评论数
+        get_comment_count = {% get_comment_count blog %}
+        
+        // 自定义字符串处理方法
+        // 例如实现：'{0}+{1}'.format('a', 'b')  => 'a+b'
+        String.prototype.format = function(){
+            var str = this;
+            for (var i = 0; i < arguments.length; i++) {
+                // 替换全部这种情况
+                str = str.replace(new RegExp('\\{' + i + '\\}', 'g'), arguments[i])
+            };
+            return str;
+        }
+
+        // 提交时会触发的事件
+        $('#comment-form').submit(function(){
+            // 先判断评论内容是否为空
+            $('#comment-error').text('');  // 重置错误信息
+
+            // 这段代码会跳转 json 界面，暂时没解决
+            // if (CKEDITOR.instances['id_text'].document.getBody().getText().trim() == ''){
+            //     $('#comment-error').text(data['message']);
+            //     return false;
+            // }
+
+            // 更新数据到 textarea
+            CKEDITOR.instances['id_text'].updateElement();
+            
+            // 异步提交
+            $.ajax({
+                // 请求地址
+                url: '{% url 'update_comment' %}',
+                type: 'post',
+                // 序列化表单值
+                data: $(this).serialize(),
+                cache: false, // 不需要缓存
+                success: function(data){
+                    console.log(data);
+                    if (data['status'] == 'SUCCESS'){
+                        // 插入数据，分两种情况
+                        if ($('#reply_comment_id').val() == 0){
+                            // 插入评论
+                            var comment_html = '<div id="root_{0}" class="comment">\
+                                <span>{1}</span>\
+                                <span>（{2}）：</span>\
+                                <div id="comment_{0}">' +
+                                    data['text'] +
+                                '</div>\
+\
+                                <!-- 评论点赞模块 -->\
+                                <!-- 点击调用方法 -->\
+                                <div class="like" onclick="likeChange(this, \'' + data['content_type'] + '\', {0})">\
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up" viewBox="0 0 16 16">\
+                                        <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a8.908 8.908 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.224 2.224 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.866.866 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>\
+                                    </svg>\
+                                    <!-- 点赞数量 -->\
+                                    <span class="liked-num">0</span>\
+                                    <span>点赞</span>\
+                                </div>\
+\
+                                &nbsp;&nbsp;&nbsp;&nbsp;\
+\
+                                <a href="javascript:reply({0});">回复</a>\
+                                <!-- 删除回复，只能删除自己评论的，超级管理员可以删除所有 -->\
+                                &nbsp;&nbsp;\
+                                <a href="javascript:del_comment({0});">删除</a>\
+                            </div>';
+                            comment_html = comment_html.format(data['pk'], data['username'], timeFormat(data['comment_time'], data['text'],
+                                                                data['content_type']));
+                            $('#comment-list').prepend(comment_html);
+                        } else {
+                            // 插入回复
+                            var reply_html = '<div  id="root_{3}" class="reply">\
+                                        <span>{0}</span>\
+                                        <span>回复</span>\
+                                        <span>{1}</span>\
+                                        <span>（{2}）：</span>\
+                                        <div id="comment_{3}">\
+                                            {4}\
+                                        </div>\
+\
+                                        <!-- 回复点赞模块 -->\
+                                        <!-- 点击调用方法 -->\
+                                        <div class="like" onclick="likeChange(this, \'{5}\', {3})">\
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up" viewBox="0 0 16 16">\
+                                                <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a8.908 8.908 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.224 2.224 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.866.866 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>\
+                                            </svg>\
+                                            <!-- 点赞数量 -->\
+                                            <span class="liked-num">0</span>\
+                                            <span>点赞</span>\
+                                        </div>\
+                                        &nbsp;&nbsp;&nbsp;&nbsp;\
+\
+                                        <a href="javascript:reply({3});">回复</a>\
+                                        \
+                                        <!-- 删除回复，只能删除自己评论的，超级管理员可以删除所有 -->\
+                                        &nbsp;&nbsp;\
+                                        <a href="javascript:del_comment({3});">删除</a>\
+                                    </div>';
+                            reply_html = reply_html.format(data['username'], data['reply_to'], timeFormat(data['comment_time']),
+                                                            data['pk'], data['text'],  data['content_type']);
+                            // 注意这里是 append
+                            $('#root_' + data['root_pk']).append(reply_html);
+                        }
+
+                        // 清空编辑框内容
+                        CKEDITOR.instances['id_text'].setData('');
+                        // 隐藏回复模块
+                        $('#reply-content-container').hide()
+                        $('#reply_comment_id').val('0')
+                        $('#no-comment').remove()
+
+                        // 更新评论数
+                        $('#comment-count').remove()
+                        get_comment_count += 1
+                        $('#blog-detail-info-li').append('<li id="comment-count" class="blog-detail-info-li">评论（' + get_comment_count + '）</li>')
+                    }
+                    else{
+                        // 显示错误信息
+                        $('#comment-error').text(data['message']);
+                    }
+                },
+                error: function(xhr){
+                    console.log(xhr);
+                },
+            });
+
+            // 返回 false 防止点完按钮直接提交
+            return false;
+        });
+
+        // 处理数字，比如 6 转为 06，12 还是 12
+        function numFormat(num){
+            return ('00' + num).substr(-2)
+        }
+        // 转换时间戳
+        function timeFormat(timestamp){
+            var datetime = new Date(timestamp * 1000);  // js以毫秒为单位要*1000
+            var year = datetime.getFullYear();
+            var month = numFormat(datetime.getMonth() + 1);  // 从0开始的要加1
+            var day = numFormat(datetime.getDate());
+            var hour = numFormat(datetime.getHours());
+            var minute = numFormat(datetime.getMinutes());
+            var seconds = numFormat(datetime.getSeconds());
+            return year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + seconds;
+        }
+
+        // 回复
+        function reply(reply_comment_id){
+            // 设置值
+            $('#reply_comment_id').val(reply_comment_id)
+            // 获取指定 id 的 html 内容
+            var html = $('#comment_' + reply_comment_id).html();
+            $('#reply-content').html(html)
+            $('#reply-content-container').show()
+
+            // 滚动到 form 的位置再偏移一点（因为有导航栏影响，这里调节了下降 60），滚动时间：300ms，回调方法
+            $('html').animate({scrollTop: $('#comment-form').offset().top - 60}, 300, function(){
+                // 获取富文本编辑器焦点
+                CKEDITOR.instances['id_text'].focus();
+            });
+        }
+        
+        // 点赞数更改
+        function likeChange(obj, content_type, object_id){
+            // 是否有 active 这个类名，没有就点赞，有就取消点赞
+            var is_like = obj.getElementsByClassName('active').length == 0;
+            $.ajax({
+                // 请求地址
+                url: "{% url 'like_change' %}",
+                type: 'GET',
+                data: {
+                    content_type: content_type,
+                    object_id: object_id,
+                    is_like: is_like,
+                },
+                cache: false,
+                success: function(data){
+                    console.log(data)
+                    if (data['status'] == 'SUCCESS'){
+                        // 更新点赞状态
+                        // 通过类名拿到标签
+                        var element = $(obj.getElementsByClassName('bi-hand-thumbs-up'));
+                        if (is_like) {
+                            element.addClass('active');
+                        }else{
+                            element.removeClass('active');
+                        }
+                        // 更新点赞数量
+                        var liked_num_element = $(obj.getElementsByClassName('liked-num'));
+                        liked_num_element.text(data['liked_num']);
+                    }else{
+                        if (data['code'] == 400){
+                            $('#login-modal').modal('show');
+                        }else{
+                            alert(data['message']);  // 弹窗显示错误信息
+                        }
+                    }
+                },
+                errro: function(xhr){
+                    console.log(xhr)
+                },
+            });
+        }
+        
+        // 登录模态表单
+        $('#login-modal-form').submit(function(){
+            $.ajax({
+                url: '{% url "login_for_modal" %}',
+                type: 'post',
+                data: $(this).serialize(),
+                cache: false,
+                success: function(data){
+                    if (data['status']=='SUCCESS'){
+                        console.log('成功')
+                        // 登录成功
+                        $('#login-modal-tip').text('');
+                        window.location.reload();
+                    }else{
+                        console.log('失败')
+                        $('#login-modal-tip').text('用户名或密码不正确');
+                    }
+                },
+            });
+            return false;
+        });
+
+        // 删除评论
+        function del_comment(reply_comment_id){
+            var token = "{{ csrf_token }}"   // 验证
+            $.ajax({
+                url: '{% url "del_comment" %}',
+                type: 'post',
+                headers: { 'X-CSRFTOKEN': `${token}` },  //
+                data: {
+                    'reply_comment_id': reply_comment_id,
+                },
+                cache: false,
+                success: function(data){
+                    console.log(data)
+                    if (data['status']=='SUCCESS'){
+                        console.log('删除成功')
+                        $('#root_' + reply_comment_id).remove()
+                    }else{
+                        console.log('删除失败')
+                    }
+                },
+            });
+            return false;
+        }
+
+    </script>
+{% endblock script_extends %}

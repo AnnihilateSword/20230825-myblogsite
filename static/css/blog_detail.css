@@ -1,0 +1,72 @@
+.blog-detail-info-ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 1.75rem 1rem 2.25rem;
+}
+
+.blog-detail-info-li {
+    display: inline-block;
+    color: #777;
+    margin-right: 1rem;
+}
+
+.blog-detail-content {
+    /* 首行缩进2字符 */
+    text-indent: 2rem;
+    margin-bottom: 2em;
+}
+
+.blog-detail-more {
+    margin-top: 2em;
+}
+
+.comment-area {
+    margin-top: 2em;
+}
+
+.comment-area-title {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.4em;
+}
+
+.comment-list {
+    margin-bottom: 4em;
+}
+
+.django-ckeditor-widget {
+    width: 100%;
+}
+
+.comment {
+    border-bottom: 1px dashed #ccc;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+.reply {
+    margin-left: 2em;
+}
+
+#reply-content-container {
+    background-color: #f8f8f8;
+    overflow: hidden;
+    padding: 1em 1em 0.5em;
+}
+
+#reply-title {
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 0.5em;
+}
+
+/* 点赞模块 */
+.like {
+    color: #262d99;
+    /* 光标样式 */
+    cursor: pointer;
+    display: inline-block;
+    /* padding: 0.5em 0.3em; */
+}
+
+.like .active {
+    color: #f22;
+}

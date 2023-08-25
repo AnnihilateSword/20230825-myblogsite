@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+<!-- 这个必须放在 extends 'base.html' 下面 -->
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock title %}
+
+<!-- 主体内容 -->
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 offset-md-4">
+
+                <div class="card">
+                    <div class="card-header">
+                        {{ form_title }}
+                    </div>
+                    <div class="card-body">
+                        <!-- 不填 是指向自己 -->
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            
+                            <!-- 默认会有冒号 ： 用下面方法可以去掉 -->
+                            <!-- 其实就是当我们自定义表单时，Django 就不会帮我们添加冒号 -->
+                            {% for field in form %}
+                                {% if not field.is_hidden %}
+                                    <!-- 标签 -->
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% endif %}
+                                <!-- 这时输入框那部分 -->
+                                {{ field }}
+                                <!-- 字段的错误信息 -->
+                                <p class="text-danger">{{ field.errors.as_text }}</p>
+                            {% endfor %}
+                            <!-- 表单的错误信息 -->
+                            <span class="text-danger">{{ form.non_field_errors }}</span>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <input class="btn btn-primary" type="submit" value="{{ submit_text }}">
+                                <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ return_back_url }}'">返回</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+{% endblock content %}

@@ -1,0 +1,10 @@
+.about-content {
+    font-family: 'KaiTi';
+    font-size: 17px;
+    text-align: center;
+}
+
+.about-content h4 {
+    font-style: italic;
+    text-decoration: underline;
+}

@@ -1,0 +1,106 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- endblock 后面的 变量名 可加可不加，为了方便阅读这里加上了 -->
+    <title>HaE | {% block title %}{% endblock title %}</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{% static 'bootstrap-5.3.1-dist/css/bootstrap.min.css' %}">
+
+    <!-- 自定义样式表 -->
+    <!-- <link rel="stylesheet" href="/static/css/base.css"> -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    {% block css_styles01 %}{% endblock css_styles01 %}
+
+    <!-- ICON -->
+    <link rel="shortcut icon" href="{% static 'res/icon/favicon-32x32.png' %}" type="image/x-icon">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg bg-light fixed-top">
+        <div class="container-fluid">
+            <a href="{% url 'home' %}" class="navbar-brand">HaE</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class=" navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link {% block nav-home-active %}{% endblock %}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'blog_list' %}" class="nav-link {% block nav-blog-active %}{% endblock %}">博客</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'about' %}" class="nav-link">关于</a>
+                    </li>
+                </ul>
+
+                <!-- 导航栏右边 -->
+                <ul class=" navbar-nav col-auto">
+                    {% if not user.is_authenticated %}
+                        <!-- 如果没有登录 -->
+                        <li class="nav-item">
+                            <a href="{% url 'login' %}?from={{ request.get_full_path }}" class="nav-link">登录</a>
+                        </li>
+                        &nbsp;&nbsp;
+                        <li class="nav-item">
+                            <a href="{% url 'register' %}?from={{ request.get_full_path }}" class="nav-link">注册</a>
+                        </li>
+                    {% else %}
+                        <!-- 已经登录 -->
+                        <!-- 下拉菜单 -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.has_nickname %}
+                                    {{ user.username }}（{{ user.nickname }}）
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'user_info' %}">个人资料</a></li>
+                                <!-- 判断用户是否有权限进入后台管理 -->
+                                {% if user.is_staff or user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">后台管理</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'logout' %}?from={{ request.get_full_path }}">退出</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 横幅标语 -->
+    <div class="header-banner" id="header-banner">
+        <div class="container">
+            <h1>HaE</h1>
+            <p>生命久如暗室，不妨我明写春诗</p>
+            <p>适度仰望，不可自卑，没有什么是不可被超越的</p>
+        </div>
+    </div>
+
+    {% block content %}{% endblock content %}
+
+    <div class="place-div"></div>
+    
+    <div class="copyright">
+        <span>Welcome to visit this website © AnnihilateSword</span>
+    </div>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="{% static 'bootstrap-5.3.1-dist/js/bootstrap.bundle.min.js' %}"></script>
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    {% block script_extends %}{% endblock script_extends %}
+</body>
+</html>

@@ -1,0 +1,24 @@
+li {
+    list-style: none;
+}
+
+.home-content {
+    /* 楷体 */
+    font-family: 'KaiTi';
+    font-size: 222%;
+    text-align: center;
+    margin-top: 4em;
+    margin-bottom: 2em;
+}
+
+.hot-data {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+#container {
+    margin: 0 auto;
+    height: 400px;
+    min-width: 400px;
+    max-width: 600px;
+}
